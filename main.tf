@@ -10,6 +10,8 @@ variable  env_prefix {}
 variable instance_type {}
 variable  public_key_location {}
 
+variable "private_key_location" {}
+
 #Create VPC
 resource "aws_vpc" "demo_vpc" {
     cidr_block = var.vpc_cidr_block
@@ -165,20 +167,24 @@ resource "aws_instance" "webserver" {
     #key_name                    = "new_key"
     key_name                    = aws_key_pair.demo-key.id
 
-    /*user_data = <<EOF
-                    #!/bin/bash
-                    sudo apt update && sudo apt install docker.io -y
-                    sudo usermod -aG docker ubuntu
-                    docker run -itd -p 8080:80 nginx:1.18
-                EOF*/
-
-    user_data = file("entry-script.sh")
+    connection {
+      type = "ssh"
+      host = aws_instance.webserver.public_ip
+      user = "ubuntu"
+      private_key = file(var.private_key_location)
+    }
+    provisioner "remote-exec" {
+      inline = [
+        "sudo mkdir /test",
+        "sudo export ENV=development",
+        "sudo apt update && sudo apt install docker.io -y"
+      ]
+    }
     tags = {
       Name = "${var.env_prefix}-server"
+    }
   }
-}
 
 output "ec2_public_ip" {
   value = aws_instance.webserver.public_ip
 }
-
