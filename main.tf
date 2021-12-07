@@ -55,7 +55,7 @@ resource "aws_instance" "webserver" {
     #ami              = data.aws_ami.latest-ubuntu-linux-image.id
     ami                         = "ami-0629230e074c580f2"
     instance_type               = var.instance_type
-    subnet_id                   = "module.my-subnet"
+    subnet_id                   = module.my-subnet.subnet
     vpc_security_group_ids      = [aws_default_security_group.default-sg.id]
     availability_zone           = var.avail_zone
     associate_public_ip_address = true
